@@ -1,0 +1,405 @@
+{
+  "name": "nightrider-copilot",
+  "displayName": "NightRider AI",
+  "description": "High-speed AI pair programmer with streaming chat, editor actions, and one-click handoff from GitHub Copilot.",
+  "version": "2.0.0",
+  "publisher": "nightrider",
+  "license": "MIT",
+  "engines": {
+    "vscode": "^1.90.0"
+  },
+  "categories": [
+    "Programming Languages",
+    "Machine Learning",
+    "Other"
+  ],
+  "keywords": [
+    "ai",
+    "copilot",
+    "chat",
+    "groq",
+    "llm",
+    "pair programming"
+  ],
+  "main": "./out/extension.js",
+  "activationEvents": [
+    "onView:nightriderSidebar",
+    "onCommand:nightrider.chat.focus",
+    "onStartupFinished"
+  ],
+  "capabilities": {
+    "untrustedWorkspaces": {
+      "supported": "limited",
+      "description": "In untrusted workspaces NightRider will not run terminal commands, send workspace files to the model, or apply edits to your files."
+    }
+  },
+  "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "nightriderContainer",
+          "title": "NightRider AI",
+          "icon": "media/nightrider.svg"
+        }
+      ]
+    },
+    "views": {
+      "nightriderContainer": [
+        {
+          "type": "webview",
+          "id": "nightriderSidebar",
+          "name": "NightRider",
+          "contextualTitle": "NightRider AI"
+        }
+      ]
+    },
+    "chatParticipants": [
+      {
+        "id": "nightrider.chat",
+        "name": "nightrider",
+        "fullName": "NightRider AI",
+        "description": "Ask NightRider about your code, get explanations, fixes, tests and reviews from any file or selection.",
+        "isSticky": true,
+        "commands": [
+          {
+            "name": "explain",
+            "description": "Explain the referenced code"
+          },
+          {
+            "name": "fix",
+            "description": "Find and fix problems in the referenced code"
+          },
+          {
+            "name": "tests",
+            "description": "Write unit tests for the referenced code"
+          },
+          {
+            "name": "docs",
+            "description": "Write documentation for the referenced code"
+          },
+          {
+            "name": "review",
+            "description": "Review the referenced code for bugs and risks"
+          }
+        ]
+      }
+    ],
+    "commands": [
+      {
+        "command": "nightrider.chat.focus",
+        "title": "Open Chat",
+        "category": "NightRider"
+      },
+      {
+        "command": "nightrider.chat.newChat",
+        "title": "New Chat",
+        "category": "NightRider",
+        "icon": "$(add)"
+      },
+      {
+        "command": "nightrider.chat.ask",
+        "title": "Ask NightRider",
+        "category": "NightRider"
+      },
+      {
+        "command": "nightrider.chat.askAboutSelection",
+        "title": "Ask About Selection",
+        "category": "NightRider"
+      },
+      {
+        "command": "nightrider.chat.editLastMessage",
+        "title": "Edit Last Message",
+        "category": "NightRider"
+      },
+      {
+        "command": "nightrider.chat.history",
+        "title": "Chat History",
+        "category": "NightRider",
+        "icon": "$(history)"
+      },
+      {
+        "command": "nightrider.key.set",
+        "title": "Set API Key",
+        "category": "NightRider"
+      },
+      {
+        "command": "nightrider.key.clear",
+        "title": "Clear API Key",
+        "category": "NightRider"
+      },
+      {
+        "command": "nightrider.model.select",
+        "title": "Select Model",
+        "category": "NightRider",
+        "icon": "$(chip)"
+      },
+      {
+        "command": "nightrider.action.explain",
+        "title": "Explain This File",
+        "category": "NightRider"
+      },
+      {
+        "command": "nightrider.action.fix",
+        "title": "Fix Errors in This File",
+        "category": "NightRider"
+      },
+      {
+        "command": "nightrider.action.tests",
+        "title": "Write Tests for This File",
+        "category": "NightRider"
+      },
+      {
+        "command": "nightrider.action.document",
+        "title": "Document This File",
+        "category": "NightRider"
+      },
+      {
+        "command": "nightrider.action.refactor",
+        "title": "Refactor This File",
+        "category": "NightRider"
+      },
+      {
+        "command": "nightrider.action.review",
+        "title": "Review This File",
+        "category": "NightRider"
+      },
+      {
+        "command": "nightrider.diagnostics.fixAll",
+        "title": "Fix Problems in Workspace",
+        "category": "NightRider"
+      },
+      {
+        "command": "nightrider.code.copy",
+        "title": "Copy Code Block",
+        "category": "NightRider"
+      },
+      {
+        "command": "nightrider.code.applyToFile",
+        "title": "Apply Code to File",
+        "category": "NightRider"
+      },
+      {
+        "command": "nightrider.code.insertAtCursor",
+        "title": "Insert Code at Cursor",
+        "category": "NightRider"
+      },
+      {
+        "command": "nightrider.code.preview",
+        "title": "Preview Changes",
+        "category": "NightRider"
+      },
+      {
+        "command": "nightrider.terminal.run",
+        "title": "Run Command in Terminal",
+        "category": "NightRider"
+      },
+      {
+        "command": "nightrider.copilot.switch",
+        "title": "Switch from Copilot to NightRider",
+        "category": "NightRider"
+      },
+      {
+        "command": "nightrider.copilot.reportLimit",
+        "title": "I Ran Out of Copilot Tokens",
+        "category": "NightRider"
+      },
+      {
+        "command": "nightrider.copilot.clearLimit",
+        "title": "Copilot Tokens Refreshed",
+        "category": "NightRider"
+      },
+      {
+        "command": "nightrider.copilot.status",
+        "title": "Show Copilot & NightRider Status",
+        "category": "NightRider"
+      },
+      {
+        "command": "nightrider.config.open",
+        "title": "Open Settings",
+        "category": "NightRider"
+      }
+    ],
+    "menus": {
+      "view/title": [
+        {
+          "command": "nightrider.chat.newChat",
+          "when": "view == nightriderSidebar",
+          "group": "navigation@1"
+        },
+        {
+          "command": "nightrider.chat.history",
+          "when": "view == nightriderSidebar",
+          "group": "navigation@2"
+        },
+        {
+          "command": "nightrider.model.select",
+          "when": "view == nightriderSidebar",
+          "group": "navigation@3"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "nightrider.chat.history",
+          "when": "false"
+        }
+      ],
+      "editor/context": [
+        {
+          "command": "nightrider.chat.askAboutSelection",
+          "when": "editorHasSelection",
+          "group": "1_modification@100"
+        }
+      ],
+      "commandPalette": [
+        {
+          "command": "nightrider.code.copy",
+          "when": "false"
+        },
+        {
+          "command": "nightrider.code.applyToFile",
+          "when": "false"
+        },
+        {
+          "command": "nightrider.code.insertAtCursor",
+          "when": "false"
+        },
+        {
+          "command": "nightrider.code.preview",
+          "when": "false"
+        },
+        {
+          "command": "nightrider.terminal.run",
+          "when": "false"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "NightRider AI",
+      "properties": {
+        "nightrider.apiBaseUrl": {
+          "type": "string",
+          "default": "https://api.groq.com/openai/v1",
+          "markdownDescription": "OpenAI-compatible API base URL. Point this at any compatible provider (Groq, OpenRouter, Together, Ollama, LM Studio) to switch backends.",
+          "scope": "machine"
+        },
+        "nightrider.model": {
+          "type": "string",
+          "default": "openai/gpt-oss-120b",
+          "description": "Model id sent to the provider.",
+          "scope": "window"
+        },
+        "nightrider.temperature": {
+          "type": "number",
+          "default": 0.2,
+          "minimum": 0,
+          "maximum": 2,
+          "description": "Sampling temperature. Lower is more deterministic and better for code."
+        },
+        "nightrider.maxOutputTokens": {
+          "type": "number",
+          "default": 4096,
+          "minimum": 256,
+          "maximum": 32768,
+          "description": "Maximum tokens to generate per response."
+        },
+        "nightrider.streaming": {
+          "type": "boolean",
+          "default": true,
+          "description": "Stream responses token by token as they arrive."
+        },
+        "nightrider.systemPrompt": {
+          "type": "string",
+          "default": "",
+          "markdownDescription": "Extra instructions appended to the built-in system prompt."
+        },
+        "nightrider.includeCurrentFile": {
+          "type": "boolean",
+          "default": true,
+          "description": "Automatically include the file you are editing in every request."
+        },
+        "nightrider.includeSelection": {
+          "type": "boolean",
+          "default": true,
+          "description": "Automatically include the current selection in every request."
+        },
+        "nightrider.maxContextFiles": {
+          "type": "number",
+          "default": 6,
+          "minimum": 0,
+          "maximum": 25,
+          "description": "How many @-mentioned files to attach to a request."
+        },
+        "nightrider.maxFileContextChars": {
+          "type": "number",
+          "default": 24000,
+          "minimum": 2000,
+          "maximum": 200000,
+          "description": "Character budget for automatic file context before truncation."
+        },
+        "nightrider.autoContext": {
+          "type": "boolean",
+          "default": true,
+          "description": "Search the workspace for files relevant to your question when you have not @-mentioned anything."
+        },
+        "nightrider.confirmBeforeApply": {
+          "type": "boolean",
+          "default": true,
+          "description": "Ask for confirmation before writing model-generated code into your files."
+        },
+        "nightrider.confirmBeforeRun": {
+          "type": "boolean",
+          "default": true,
+          "description": "Ask for confirmation before running a model-generated terminal command."
+        },
+        "nightrider.saveHistory": {
+          "type": "boolean",
+          "default": true,
+          "description": "Persist conversations between sessions."
+        },
+        "nightrider.maxSavedConversations": {
+          "type": "number",
+          "default": 25,
+          "minimum": 1,
+          "maximum": 200,
+          "description": "How many past conversations to keep."
+        },
+        "nightrider.copilot.statusBar": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show a status bar item with the active model and a Copilot handoff shortcut."
+        },
+        "nightrider.copilot.autoHandoff": {
+          "type": "boolean",
+          "default": true,
+          "markdownDescription": "When you report that Copilot ran out of tokens, NightRider switches over and offers to continue the same task."
+        },
+        "nightrider.copilot.handoffContext": {
+          "type": "boolean",
+          "default": true,
+          "description": "Attach the active selection and clipboard text when switching over from Copilot."
+        },
+        "nightrider.telemetryNotice": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show the one-time notice explaining that your code is sent to the configured model provider."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "check": "tsc -p ./ --noEmit",
+    "test": "node test/run.cjs",
+    "pretest": "npm run compile",
+    "package": "vsce package --no-git-tag-version"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/vscode": "^1.90.0",
+    "@vscode/vsce": "^2.29.0",
+    "jsdom": "^26.0.0",
+    "typescript": "^5.9.3"
+  }
+}
