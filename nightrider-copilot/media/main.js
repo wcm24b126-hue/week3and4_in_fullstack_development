@@ -1,9 +1,9 @@
-/* NightRider webview controller. */
+/* KnightRider webview controller. */
 (function () {
   "use strict";
 
   const vscode = acquireVsCodeApi();
-  const MD = window.NightRiderMarkdown;
+  const MD = window.KnightRiderMarkdown;
 
   const $ = (id) => document.getElementById(id);
   const el = {
@@ -106,6 +106,12 @@
         el.input.focus();
         break;
       case "mentionResults":
+        // A debounced request can still be in flight after the user deleted
+        // the "@". Dropping the reply stops a stale list from reopening the
+        // popover over a composer that is no longer asking for anything.
+        if (!state.mention) {
+          break;
+        }
         state.popover.items = msg.files;
         state.popover.kind = "file";
         state.popover.index = 0;
@@ -193,7 +199,7 @@
       const empty = document.createElement("div");
       empty.className = "nr-empty";
       empty.innerHTML =
-        "<div><strong>NightRider</strong></div>" +
+        "<div><strong>KnightRider</strong></div>" +
         "<div>Ask about the file you are editing,</div>" +
         "<div>type <code>@</code> to attach a file,</div>" +
         "<div>or pick an action above.</div>";
@@ -219,7 +225,7 @@
 
     const role = document.createElement("span");
     role.className = "nr-role";
-    role.textContent = message.role === "user" ? "You" : "NightRider";
+    role.textContent = message.role === "user" ? "You" : "KnightRider";
     head.appendChild(role);
 
     if (message.model) {
@@ -537,13 +543,13 @@
     }
     const s = state.status || {};
     state.popover.items = [
-      { label: "Switch from Copilot to NightRider", action: "nightrider.copilot.switch" },
-      { label: "Copilot tokens refreshed", action: "nightrider.copilot.clearLimit" },
-      { label: "Set API key", action: "nightrider.key.set" },
-      { label: "Select model", action: "nightrider.model.select" },
-      { label: "Chat history", action: "nightrider.chat.history" },
-      { label: "New chat", action: "nightrider.chat.newChat" },
-      { label: "Open settings", action: "nightrider.config.open" }
+      { label: "Switch from Copilot to KnightRider", action: "knightrider.copilot.switch" },
+      { label: "Copilot tokens refreshed", action: "knightrider.copilot.clearLimit" },
+      { label: "Set API key", action: "knightrider.key.set" },
+      { label: "Select model", action: "knightrider.model.select" },
+      { label: "Chat history", action: "knightrider.chat.history" },
+      { label: "New chat", action: "knightrider.chat.newChat" },
+      { label: "Open settings", action: "knightrider.config.open" }
     ];
     state.popover.kind = "status";
     state.popover.index = 0;
@@ -608,7 +614,17 @@
 
   // -------------------------------------------------------------- mentions
 
+  // Every keystroke used to post a mentionQuery, and each one made the host
+  // filter and rank the whole workspace index before answering. Debouncing
+  // keeps one round-trip per pause instead of one per character.
+  const MENTION_DEBOUNCE_MS = 180;
+  let mentionTimer = null;
+
   function detectMention() {
+    if (mentionTimer) {
+      clearTimeout(mentionTimer);
+      mentionTimer = null;
+    }
     const caret = el.input.selectionStart ?? 0;
     const before = el.input.value.slice(0, caret);
     const match = before.match(/(^|\s)@([^\s@]*)$/);
@@ -616,8 +632,12 @@
       closePopover();
       return;
     }
-    state.mention = { start: caret - match[2].length - 1, query: match[2] };
-    post({ type: "mentionQuery", query: match[2] });
+    const query = match[2];
+    state.mention = { start: caret - query.length - 1, query };
+    mentionTimer = setTimeout(() => {
+      mentionTimer = null;
+      post({ type: "mentionQuery", query });
+    }, MENTION_DEBOUNCE_MS);
   }
 
   function acceptPopover() {
@@ -735,7 +755,7 @@
     const chip = document.createElement("button");
     chip.className = "nr-chip";
     chip.textContent = action.label;
-    chip.title = `NightRider: ${action.label}`;
+    chip.title = `KnightRider: ${action.label}`;
     chip.addEventListener("click", () => post({ type: "runQuickAction", action: action.id }));
     el.quickbar.appendChild(chip);
   }

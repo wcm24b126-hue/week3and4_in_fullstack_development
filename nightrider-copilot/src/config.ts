@@ -2,7 +2,7 @@ import * as vscode from "vscode";
 
 export type Mode = "chat" | "analyze" | "terminal" | "fix";
 
-export interface NightRiderConfig {
+export interface KnightRiderConfig {
   apiBaseUrl: string;
   model: string;
   temperature: number;
@@ -24,9 +24,9 @@ export interface NightRiderConfig {
   telemetryNotice: boolean;
 }
 
-const SECTION = "nightrider";
+const SECTION = "knightrider";
 
-export function getConfig(): NightRiderConfig {
+export function getConfig(): KnightRiderConfig {
   const c = vscode.workspace.getConfiguration(SECTION);
   return {
     apiBaseUrl: c.get<string>("apiBaseUrl") ?? "https://api.groq.com/openai/v1",

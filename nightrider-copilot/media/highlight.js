@@ -251,5 +251,5 @@
     return out;
   }
 
-  global.NightRiderHighlight = { highlight, escapeHtml, normalize };
+  global.KnightRiderHighlight = { highlight, escapeHtml, normalize };
 })(typeof globalThis !== "undefined" ? globalThis : this);

@@ -5,7 +5,7 @@ export interface ModelInfo {
 }
 
 /**
- * Curated defaults. Any id can be typed into `nightrider.model` to use a model
+ * Curated defaults. Any id can be typed into `knightrider.model` to use a model
  * that is not listed here, so this is a convenience list and not a whitelist.
  *
  * Only chat/code models are listed. Audio (whisper), TTS (orpheus) and

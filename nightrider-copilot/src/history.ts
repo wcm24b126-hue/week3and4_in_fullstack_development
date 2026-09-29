@@ -2,8 +2,8 @@ import * as vscode from "vscode";
 import { getConfig } from "./config";
 import type { Conversation } from "./types";
 
-const CONVERSATIONS_KEY = "nightrider.conversations";
-const ACTIVE_KEY = "nightrider.activeConversation";
+const CONVERSATIONS_KEY = "knightrider.conversations";
+const ACTIVE_KEY = "knightrider.activeConversation";
 
 export class HistoryStore implements vscode.Disposable {
   private readonly _onDidChange = new vscode.EventEmitter<void>();

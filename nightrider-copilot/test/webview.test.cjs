@@ -137,7 +137,9 @@ const STATUS = { provider: "Groq", model: "Llama 3.3 70B", copilotInstalled: tru
   // --- mentions
   input.value = "look at @src/ext";
   input.dispatchEvent(new w.Event("input"));
-  await w.__tick(50);
+  // The mention autocomplete is debounced (180ms) so a burst of keystrokes
+  // costs one round-trip instead of one per character. Wait past the debounce.
+  await w.__tick(320);
   const queryMsg = w.__send.filter((m) => m.type === "mentionQuery").pop();
   check("mention query posted", queryMsg && queryMsg.query === "src/ext", JSON.stringify(queryMsg));
   w.__host({ type: "mentionResults", files: [{ path: "src/extension.ts", name: "extension.ts" }, { path: "src/views/chatView.ts", name: "chatView.ts" }] });
@@ -190,7 +192,7 @@ const STATUS = { provider: "Groq", model: "Llama 3.3 70B", copilotInstalled: tru
   d.querySelectorAll(".nr-pop-item")[0].dispatchEvent(new w.MouseEvent("mousedown", { bubbles: true }));
   await w.__tick(30);
   const cmd = w.__send.find((m) => m.type === "command");
-  check("status action posts whitelisted command", cmd && cmd.id === "nightrider.copilot.switch", JSON.stringify(cmd));
+  check("status action posts whitelisted command", cmd && cmd.id === "knightrider.copilot.switch", JSON.stringify(cmd));
 
   // --- copilot limited status styling
   w.__host({ type: "setStatus", status: { ...STATUS, copilotLimited: true } });

@@ -39,7 +39,7 @@ export interface PromptOptions {
 }
 
 export class ChatViewProvider implements vscode.WebviewViewProvider, vscode.Disposable {
-  static readonly viewType = "nightriderSidebar";
+  static readonly viewType = "knightriderSidebar";
 
   private _view: vscode.WebviewView | undefined;
   private _abort: AbortController | undefined;
@@ -197,7 +197,7 @@ export class ChatViewProvider implements vscode.WebviewViewProvider, vscode.Disp
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta http-equiv="Content-Security-Policy" content="${csp}">
 <link nonce="${n}" href="${asUri("styles.css")}" rel="stylesheet">
-<title>NightRider</title>
+<title>KnightRider</title>
 </head>
 <body>
   <header class="nr-header">
@@ -332,7 +332,7 @@ export class ChatViewProvider implements vscode.WebviewViewProvider, vscode.Disp
       await this.post({
         type: "showNotice",
         level: "error",
-        message: `NightRider: ${(err as Error).message ?? "unexpected error"}`
+        message: `KnightRider: ${(err as Error).message ?? "unexpected error"}`
       });
     }
   }
@@ -348,7 +348,7 @@ export class ChatViewProvider implements vscode.WebviewViewProvider, vscode.Disp
       await this.post({
         type: "showNotice",
         level: "warn",
-        message: "No API key stored yet. Run “NightRider: Set API Key” to connect a model provider."
+        message: "No API key stored yet. Run “KnightRider: Set API Key” to connect a model provider."
       });
     }
   }
@@ -397,7 +397,7 @@ export class ChatViewProvider implements vscode.WebviewViewProvider, vscode.Disp
 
     const key = await this._secrets.get();
     if (!key) {
-      await vscode.window.showErrorMessage("NightRider: no API key is set. Run “NightRider: Set API Key”.");
+      await vscode.window.showErrorMessage("KnightRider: no API key is set. Run “KnightRider: Set API Key”.");
       await this.pushState();
       return;
     }
@@ -601,7 +601,7 @@ export class ChatViewProvider implements vscode.WebviewViewProvider, vscode.Disp
         preview: true
       });
     } catch (err) {
-      void vscode.window.showErrorMessage(`NightRider: could not open ${relPath} (${(err as Error).message}).`);
+      void vscode.window.showErrorMessage(`KnightRider: could not open ${relPath} (${(err as Error).message}).`);
     }
   }
 
@@ -610,7 +610,7 @@ export class ChatViewProvider implements vscode.WebviewViewProvider, vscode.Disp
     switch (msg.action) {
       case "copy":
         await vscode.env.clipboard.writeText(code);
-        void vscode.window.showInformationMessage("NightRider: code copied.");
+        void vscode.window.showInformationMessage("KnightRider: code copied.");
         break;
       case "apply":
         await this._applier.replaceActiveFile(code, true);
@@ -629,19 +629,19 @@ export class ChatViewProvider implements vscode.WebviewViewProvider, vscode.Disp
 
   /** Only extension-owned commands are reachable from the webview. */
   private async runCommand(id: string): Promise<void> {
-    if (!id.startsWith("nightrider.")) {
+    if (!id.startsWith("knightrider.")) {
       return;
     }
     const known = [
-      "nightrider.copilot.switch",
-      "nightrider.copilot.clearLimit",
-      "nightrider.copilot.status",
-      "nightrider.key.set",
-      "nightrider.key.clear",
-      "nightrider.model.select",
-      "nightrider.chat.history",
-      "nightrider.chat.newChat",
-      "nightrider.config.open"
+      "knightrider.copilot.switch",
+      "knightrider.copilot.clearLimit",
+      "knightrider.copilot.status",
+      "knightrider.key.set",
+      "knightrider.key.clear",
+      "knightrider.model.select",
+      "knightrider.chat.history",
+      "knightrider.chat.newChat",
+      "knightrider.config.open"
     ];
     if (!known.includes(id)) {
       logWarn(`rejected unknown webview command: ${id}`);

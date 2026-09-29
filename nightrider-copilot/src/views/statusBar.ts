@@ -5,8 +5,8 @@ import { modelLabel } from "../llm/models";
 
 export function registerStatusBar(copilot: CopilotBridge): vscode.Disposable {
   const item = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
-  item.command = "nightrider.copilot.status";
-  item.name = "NightRider AI";
+  item.command = "knightrider.copilot.status";
+  item.name = "KnightRider AI";
 
   const render = (): void => {
     if (!getConfig().copilotStatusBar) {
@@ -17,11 +17,11 @@ export function registerStatusBar(copilot: CopilotBridge): vscode.Disposable {
     const limited = copilot.state.limited;
 
     item.text = limited
-      ? "$(debug-pause) NightRider"
-      : `$(hubot) NightRider: ${modelLabel(getConfig().model)}`;
+      ? "$(debug-pause) KnightRider"
+      : `$(hubot) KnightRider: ${modelLabel(getConfig().model)}`;
     item.tooltip = new vscode.MarkdownString(
       [
-        "**NightRider AI**",
+        "**KnightRider AI**",
         "",
         `- Model: \`${getConfig().model}\``,
         `- Provider: ${provider(getConfig().apiBaseUrl)}`,
@@ -33,7 +33,7 @@ export function registerStatusBar(copilot: CopilotBridge): vscode.Disposable {
         limited ? "- Copilot quota: **reported as exhausted**" : "",
         "",
         limited
-          ? "Run *NightRider: Switch from Copilot* to carry your work over."
+          ? "Run *KnightRider: Switch from Copilot* to carry your work over."
           : "Click for status, model switching and settings."
       ]
         .filter(Boolean)
@@ -50,7 +50,7 @@ export function registerStatusBar(copilot: CopilotBridge): vscode.Disposable {
   const subs: vscode.Disposable[] = [
     copilot.onDidChange(render),
     vscode.workspace.onDidChangeConfiguration((e) => {
-      if (e.affectsConfiguration("nightrider")) {
+      if (e.affectsConfiguration("knightrider")) {
         render();
       }
     })

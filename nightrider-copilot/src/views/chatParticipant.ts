@@ -10,7 +10,7 @@ import type { ChatViewProvider } from "./chatView";
 import { stripFences } from "./chatView";
 
 /**
- * Registers `@nightrider` inside the native VS Code chat view so the assistant
+ * Registers `@knightrider` inside the native VS Code chat view so the assistant
  * is usable from the same surface as Copilot Chat.
  */
 export function registerChatParticipant(
@@ -21,7 +21,7 @@ export function registerChatParticipant(
   let participant: vscode.ChatParticipant | undefined;
 
   try {
-    participant = vscode.chat.createChatParticipant("nightrider.chat", async (
+    participant = vscode.chat.createChatParticipant("knightrider.chat", async (
       request,
       context,
       stream,
@@ -35,7 +35,7 @@ export function registerChatParticipant(
 
       if (!(await secrets.has())) {
         stream.markdown(
-          "**No API key is set.** Run *NightRider: Set API Key* from the command palette, then try again."
+          "**No API key is set.** Run *KnightRider: Set API Key* from the command palette, then try again."
         );
         return {};
       }
@@ -99,12 +99,12 @@ export function registerChatParticipant(
         const code = extractCode(result.text);
         if (code) {
           stream.button({
-            command: "nightrider.code.applyToFile",
+            command: "knightrider.code.applyToFile",
             title: "$(check) Apply to file",
             arguments: [code]
           });
           stream.button({
-            command: "nightrider.code.insertAtCursor",
+            command: "knightrider.code.insertAtCursor",
             title: "$(insert) Insert at cursor",
             arguments: [code]
           });
@@ -113,7 +113,7 @@ export function registerChatParticipant(
         const command_ = result.text.match(/```(?:ba)?sh\n([\s\S]*?)```/);
         if (command_) {
           stream.button({
-            command: "nightrider.terminal.run",
+            command: "knightrider.terminal.run",
             title: "$(terminal) Run in terminal",
             arguments: [command_[1].trim()]
           });
@@ -140,7 +140,7 @@ export function registerChatParticipant(
       } catch (err) {
         const error = err instanceof LlmError ? err : new LlmError((err as Error).message, "unknown");
         logWarn(`chat participant failed: ${error.kind}`);
-        stream.markdown(`**NightRider could not finish that.** ${error.message}`);
+        stream.markdown(`**KnightRider could not finish that.** ${error.message}`);
         return { metadata: { error: error.kind } };
       } finally {
         abort.dispose();
@@ -153,7 +153,7 @@ export function registerChatParticipant(
     return new vscode.Disposable(() => undefined);
   }
 
-  participant.iconPath = vscode.Uri.joinPath(chat.extensionUri, "media", "nightrider.svg");
+  participant.iconPath = vscode.Uri.joinPath(chat.extensionUri, "media", "knightrider.svg");
 
   return participant;
 }

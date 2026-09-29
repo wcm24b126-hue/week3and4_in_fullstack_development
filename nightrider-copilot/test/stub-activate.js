@@ -1,1 +1,1 @@
-module.exports = require("/workspaces/week3and4_in_fullstack_development/nightrider-copilot/test/activate.test.cjs").__vscode;
+module.exports = require("/workspaces/week3and4_in_fullstack_development/knight-rider-kitt/test/activate.test.cjs").__vscode;

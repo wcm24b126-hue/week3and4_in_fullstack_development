@@ -117,12 +117,12 @@ fs.writeFileSync(path.join(__dirname, "stub-e2e.generated.js"), `module.exports 
   await new Promise((r) => server.listen(0, r));
   const port = server.address().port;
   cfgValues.apiBaseUrl = `http://127.0.0.1:${port}/v1`;
-  await secretStore.store("nightrider.apiKey", "test-key");
+  await secretStore.store("knightrider.apiKey", "test-key");
 
   const ext = require(path.join(OUT, "extension.js"));
   await ext.activate(context);
 
-  const view = { webview, onDidDispose: () => ({ dispose(){} }), show: () => {}, visible: true, title: "NightRider" };
+  const view = { webview, onDidDispose: () => ({ dispose(){} }), show: () => {}, visible: true, title: "KnightRider" };
   await vscode.__provider.resolveWebviewView(view);
   check("provider resolved", !!vscode.__provider);
 
@@ -166,15 +166,15 @@ fs.writeFileSync(path.join(__dirname, "stub-e2e.generated.js"), `module.exports 
   check("user turn sent", req.messages.some((m) => m.role === "user" && m.content === "fix the bug"));
   check("streaming requested", req.stream === true);
   check("model forwarded", req.model === "test-model");
-  check("history saved the user turn", context.globalState._m["nightrider.conversations"][0].messages.some((m) => m.content === "fix the bug"));
-  check("title derived", context.globalState._m["nightrider.conversations"][0].title === "fix the bug", context.globalState._m["nightrider.conversations"][0].title);
+  check("history saved the user turn", context.globalState._m["knightrider.conversations"][0].messages.some((m) => m.content === "fix the bug"));
+  check("title derived", context.globalState._m["knightrider.conversations"][0].title === "fix the bug", context.globalState._m["knightrider.conversations"][0].title);
 
   // --- regenerate uses the same conversation
   posted = [];
   fromWebview({ type: "regenerate" });
   await sleep(500);
   check("regenerate streams again", posted.some((m) => m.type === "streamEnd" && m.message));
-  check("regenerate kept one user turn", context.globalState._m["nightrider.conversations"][0].messages.filter((m) => m.role === "user").length === 1);
+  check("regenerate kept one user turn", context.globalState._m["knightrider.conversations"][0].messages.filter((m) => m.role === "user").length === 1);
 
   // --- stop cancels
   posted = [];
@@ -183,7 +183,7 @@ fs.writeFileSync(path.join(__dirname, "stub-e2e.generated.js"), `module.exports 
 
   // --- delete a message
   posted = [];
-  const id = context.globalState._m["nightrider.conversations"][0].messages[0].id;
+  const id = context.globalState._m["knightrider.conversations"][0].messages[0].id;
   fromWebview({ type: "deleteMessage", id });
   await sleep(60);
   check("delete re-renders", posted.some((m) => m.type === "render" && !m.conversation.messages.some((x) => x.id === id)));
@@ -193,9 +193,9 @@ fs.writeFileSync(path.join(__dirname, "stub-e2e.generated.js"), `module.exports 
   fromWebview({ type: "newChat" });
   await sleep(60);
   check("newChat posts an empty conversation", posted.some((m) => m.type === "render" && m.conversation.messages.length === 0));
-  check("newChat created a second conversation", context.globalState._m["nightrider.conversations"].length === 2, String(context.globalState._m["nightrider.conversations"].length));
-  check("previous conversation is still saved", context.globalState._m["nightrider.conversations"].some((c) => c.title === "fix the bug"));
-  check("maxSavedConversations is respected", context.globalState._m["nightrider.conversations"].length <= cfgValues.maxSavedConversations);
+  check("newChat created a second conversation", context.globalState._m["knightrider.conversations"].length === 2, String(context.globalState._m["knightrider.conversations"].length));
+  check("previous conversation is still saved", context.globalState._m["knightrider.conversations"].some((c) => c.title === "fix the bug"));
+  check("maxSavedConversations is respected", context.globalState._m["knightrider.conversations"].length <= cfgValues.maxSavedConversations);
 
   // --- unknown message type is ignored, not fatal
   posted = [];
@@ -204,7 +204,7 @@ fs.writeFileSync(path.join(__dirname, "stub-e2e.generated.js"), `module.exports 
   check("unknown message is ignored", true);
 
   // --- a bad key surfaces a friendly error rather than crashing
-  await secretStore.store("nightrider.apiKey", "bad");
+  await secretStore.store("knightrider.apiKey", "bad");
   cfgValues.apiBaseUrl = `http://127.0.0.1:${port}/v1`;
   posted = [];
   const server2 = http.createServer((req, res) => { res.writeHead(401, { "content-type": "application/json" }); res.end(JSON.stringify({ error: { message: "Invalid API key" } })); });

@@ -3,7 +3,7 @@ import * as vscode from "vscode";
 let channel: vscode.LogOutputChannel | undefined;
 
 export function initLogging(): vscode.Disposable {
-  channel = vscode.window.createOutputChannel("NightRider AI", { log: true });
+  channel = vscode.window.createOutputChannel("KnightRider AI", { log: true });
   return channel;
 }
 

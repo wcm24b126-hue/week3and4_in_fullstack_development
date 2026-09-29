@@ -1,6 +1,6 @@
 import * as vscode from "vscode";
 
-const KEY_ID = "nightrider.apiKey";
+const KEY_ID = "knightrider.apiKey";
 
 /**
  * Thin wrapper over `context.secrets` so the rest of the extension never has

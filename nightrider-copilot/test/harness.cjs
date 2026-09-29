@@ -1,4 +1,4 @@
-// Shared bootstrap for the NightRider test suite.
+// Shared bootstrap for the KnightRider test suite.
 //
 // The tests drive the *compiled* output in out/ against a stubbed `vscode`
 // module, so they exercise the same code that ships in the VSIX. Run

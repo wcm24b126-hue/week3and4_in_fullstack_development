@@ -1,5 +1,5 @@
 import * as vscode from "vscode";
-import type { NightRiderConfig } from "../config";
+import type { KnightRiderConfig } from "../config";
 import { logWarn } from "../logging";
 import type { AttachedFile, ContextBundle } from "../types";
 import { getFileIndex, rankFiles, type IndexedFile } from "./fileIndex";
@@ -15,7 +15,7 @@ export interface ContextRequest {
   mentions: string[];
   query: string;
   includeSelection: boolean;
-  config: NightRiderConfig;
+  config: KnightRiderConfig;
 }
 
 export async function buildContext(req: ContextRequest): Promise<ContextBundle> {
@@ -66,30 +66,35 @@ export async function buildContext(req: ContextRequest): Promise<ContextBundle> 
   }
 
   // 2. Explicitly @-mentioned files.
-  const index = await getFileIndex();
+  // The index is only worth building if something can actually consume it, so
+  // an un-mentioned, auto-context-disabled request never pays for the scan.
+  const wantMentions = req.mentions.length > 0;
+  const wantAuto = cfg.autoContext && !wantMentions && req.query.trim().length > 0;
+  const index = wantMentions || wantAuto ? await getFileIndex() : undefined;
   const mentioned: IndexedFile[] = [];
-  for (const rel of req.mentions.slice(0, cfg.maxContextFiles)) {
-    const file = await resolveMention(rel, index);
-    if (file) {
-      mentioned.push(file);
+  if (index) {
+    for (const rel of req.mentions.slice(0, cfg.maxContextFiles)) {
+      const file = await resolveMention(rel, index);
+      if (file) {
+        mentioned.push(file);
+      }
     }
   }
 
   for (const file of mentioned) {
-    const doc = await openTextDocument(file.uri);
-    if (!doc) {
+    const text = await readBoundedText(file.uri, 12000);
+    if (text === undefined) {
       continue;
     }
-    const text = doc.getText();
-    const clipped = clip(text, 12000);
+    const clipped = text.text;
     if (!spend(clipped.length)) {
       break;
     }
     files.push({
       path: file.relPath,
       name: file.name,
-      chars: text.length,
-      truncated: text.length !== clipped.length
+      chars: text.totalChars,
+      truncated: text.truncated
     });
     sections.push(`File: ${file.relPath}\n${clipped}`);
   }
@@ -109,7 +114,7 @@ export async function buildContext(req: ContextRequest): Promise<ContextBundle> 
   }
 
   // 4. Otherwise search for the files the question is about.
-  if (cfg.autoContext && mentioned.length === 0 && req.query.trim()) {
+  if (wantAuto && index) {
     const ranked = rankFiles(index, req.query, Math.min(3, cfg.maxContextFiles));
     for (const file of ranked) {
       if (mentioned.some((m) => m.relPath === file.relPath)) {
@@ -118,27 +123,28 @@ export async function buildContext(req: ContextRequest): Promise<ContextBundle> 
       if (editor && describe(editor.document.uri) === file.relPath) {
         continue;
       }
-      const doc = await openTextDocument(file.uri);
-      if (!doc) {
+      const text = await readBoundedText(file.uri, 8000);
+      if (text === undefined) {
         continue;
       }
-      const text = doc.getText();
-      const clipped = clip(text, 8000);
+      const clipped = text.text;
       if (!spend(clipped.length)) {
         break;
       }
       files.push({
         path: file.relPath,
         name: file.name,
-        chars: text.length,
-        truncated: text.length !== clipped.length
+        chars: text.totalChars,
+        truncated: text.truncated
       });
       sections.push(`Related file: ${file.relPath}\n${clipped}`);
     }
   }
 
   const symbols = editor && isText(editor.document) ? await describeSymbols(editor.document) : "";
-  const diagnostics = collectDiagnostics();
+  // Scoped to the active document. The unscoped call returns every diagnostic
+  // in the window, which is what used to stall the extension host on request.
+  const diagnostics = editor ? collectDiagnostics(editor.document.uri) : "";
 
   return {
     text: sections.join("\n\n"),
@@ -163,7 +169,9 @@ async function resolveMention(rel: string, index: { byRelPath: Map<string, Index
   try {
     const stat = await vscode.workspace.fs.stat(uri);
     if (stat.type === vscode.FileType.File) {
-      return { uri, relPath: vscode.workspace.asRelativePath(uri, false), name: rel.split(/[\\/]/).pop() ?? rel };
+      const relPath = vscode.workspace.asRelativePath(uri, false);
+      const name = rel.split(/[\\/]/).pop() ?? rel;
+      return { uri, relPath, name, relLower: relPath.toLowerCase(), nameLower: name.toLowerCase() };
     }
   } catch {
     /* not a path */
@@ -171,18 +179,58 @@ async function resolveMention(rel: string, index: { byRelPath: Map<string, Index
   return undefined;
 }
 
-async function openTextDocument(uri: vscode.Uri): Promise<vscode.TextDocument | undefined> {
+/**
+ * Files larger than this are never read for context. Without a cap a single
+ * minified bundle or lock file would be materialised as a multi-megabyte
+ * string just to keep its first few thousand characters.
+ */
+const MAX_CONTEXT_FILE_BYTES = 512 * 1024;
+
+interface BoundedText {
+  /** The (possibly clipped) text to attach to the prompt. */
+  text: string;
+  /** True-length of the file on disk, for the UI. */
+  totalChars: number;
+  truncated: boolean;
+}
+
+/**
+ * Reads a file for context without going through `openTextDocument`.
+ *
+ * `openTextDocument` registers a real document model that is never released,
+ * so every mention leaked one for the life of the window. `workspace.fs` reads
+ * the bytes directly and leaves no model behind. Oversized files are skipped
+ * outright rather than read and thrown away.
+ */
+async function readBoundedText(
+  uri: vscode.Uri,
+  max: number
+): Promise<BoundedText | undefined> {
   const scheme = uri.scheme;
-  const allowed = scheme === "file" || scheme === "untitled" || scheme === "vscode-remote" || scheme === "vscode-vfs";
-  if (!allowed) {
+  if (scheme !== "file" && scheme !== "vscode-remote" && scheme !== "vscode-vfs") {
     return undefined;
   }
   try {
-    const doc = await vscode.workspace.openTextDocument(uri);
-    if (doc.languageId === "git" || doc.uri.scheme === "git") {
+    const stat = await vscode.workspace.fs.stat(uri);
+    if (stat.type !== vscode.FileType.File) {
       return undefined;
     }
-    return doc;
+    if (stat.size > MAX_CONTEXT_FILE_BYTES) {
+      logWarn(`skipping oversized context file (${stat.size} bytes): ${uri.fsPath}`);
+      return undefined;
+    }
+    const bytes = await vscode.workspace.fs.readFile(uri);
+    const decoded = new TextDecoder("utf-8", { fatal: false }).decode(bytes);
+    // Strip a BOM and any NUL padding so binary-ish files are not attached.
+    if (decoded.includes("\u0000")) {
+      return undefined;
+    }
+    const text = decoded.charCodeAt(0) === 0xfeff ? decoded.slice(1) : decoded;
+    return {
+      text: clip(text, max),
+      totalChars: text.length,
+      truncated: text.length > max
+    };
   } catch {
     return undefined;
   }
@@ -221,25 +269,24 @@ async function describeSymbols(doc: vscode.TextDocument): Promise<string> {
   }
 }
 
-function collectDiagnostics(): string {
+function collectDiagnostics(uri: vscode.Uri): string {
   try {
-    const all = vscode.languages.getDiagnostics();
+    if (uri.scheme === "output" || uri.scheme === "git") {
+      return "";
+    }
+    // Scoped call: only the file the developer is actually looking at.
+    const all = vscode.languages.getDiagnostics(uri);
     const lines: string[] = [];
-    for (const [uri, diags] of all) {
-      if (uri.scheme === "output" || uri.scheme === "git") {
+    const rel = describe(uri);
+    for (const d of all) {
+      if (d.severity === vscode.DiagnosticSeverity.Hint || d.severity === vscode.DiagnosticSeverity.Information) {
         continue;
       }
-      for (const d of diags) {
-        if (d.severity === vscode.DiagnosticSeverity.Hint || d.severity === vscode.DiagnosticSeverity.Information) {
-          continue;
-        }
-        const sev = d.severity === vscode.DiagnosticSeverity.Error ? "error" : "warning";
-        const rel = describe(uri);
-        const code = typeof d.code === "object" && d.code ? ` (${(d.code as { value: string | number }).value})` : d.code ? ` (${d.code})` : "";
-        lines.push(`${rel}:${d.range.start.line + 1}:${d.range.start.character + 1} ${sev}${code}: ${d.message.replace(/\s+/g, " ")}`);
-        if (lines.length >= 40) {
-          return lines.join("\n");
-        }
+      const sev = d.severity === vscode.DiagnosticSeverity.Error ? "error" : "warning";
+      const code = typeof d.code === "object" && d.code ? ` (${(d.code as { value: string | number }).value})` : d.code ? ` (${d.code})` : "";
+      lines.push(`${rel}:${d.range.start.line + 1}:${d.range.start.character + 1} ${sev}${code}: ${d.message.replace(/\s+/g, " ")}`);
+      if (lines.length >= 20) {
+        return lines.join("\n");
       }
     }
     return lines.join("\n");

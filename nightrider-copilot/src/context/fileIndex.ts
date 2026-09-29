@@ -7,6 +7,14 @@ export interface IndexedFile {
   uri: vscode.Uri;
   relPath: string;
   name: string;
+  /**
+   * Lowercased relPath and name, computed once when the index is built.
+   * Ranking runs on every mention keystroke, so re-lowercasing inside the
+   * scoring loop was allocating two strings per file per term. Optional
+   * because they are a cache, not data: `rankFiles` falls back if absent.
+   */
+  relLower?: string;
+  nameLower?: string;
 }
 
 export interface FileIndex {
@@ -46,10 +54,13 @@ export async function getFileIndex(): Promise<FileIndex> {
         const relPath = folder
           ? vscode.workspace.asRelativePath(uri, false)
           : uri.fsPath;
+        const name = relPath.split(/[\\/]/).pop() ?? relPath;
         const file: IndexedFile = {
           uri,
           relPath,
-          name: relPath.split(/[\\/]/).pop() ?? relPath
+          name,
+          relLower: relPath.toLowerCase(),
+          nameLower: name.toLowerCase()
         };
         all.push(file);
         byRelPath.set(relPath.toLowerCase(), file);
@@ -89,7 +100,11 @@ export function rankFiles(index: FileIndex, query: string, limit: number): Index
 
   const scored: Scored[] = [];
   for (const file of index.all) {
-    const hay = file.relPath.toLowerCase();
+    // Prefer the precomputed lowercase forms. The fallback keeps a partially
+    // built or hand-constructed index from throwing mid-request; `??` only
+    // allocates when the cached form is genuinely absent.
+    const hay = file.relLower ?? file.relPath.toLowerCase();
+    const nameLower = file.nameLower ?? file.name.toLowerCase();
     let score = 0;
     let matched = false;
 
@@ -97,9 +112,9 @@ export function rankFiles(index: FileIndex, query: string, limit: number): Index
       if (hay.includes(term)) {
         matched = true;
         score += 6;
-        if (file.name.toLowerCase() === term) {
+        if (nameLower === term) {
           score += 10;
-        } else if (file.name.toLowerCase().includes(term)) {
+        } else if (nameLower.includes(term)) {
           score += 4;
         }
         if (hay.endsWith(term)) {

@@ -36,7 +36,7 @@ class PreviewProvider implements vscode.TextDocumentContentProvider, vscode.Disp
   }
 }
 
-const PREVIEW_SCHEME = "nightrider-preview";
+const PREVIEW_SCHEME = "knightrider-preview";
 
 export class CodeApplier implements vscode.Disposable {
   private readonly _preview = new PreviewProvider();
@@ -48,11 +48,11 @@ export class CodeApplier implements vscode.Disposable {
   async replaceActiveFile(code: string, preferSelection = true): Promise<boolean> {
     const editor = vscode.window.activeTextEditor;
     if (!editor) {
-      void vscode.window.showErrorMessage("NightRider: open a file first so the code has somewhere to go.");
+      void vscode.window.showErrorMessage("KnightRider: open a file first so the code has somewhere to go.");
       return false;
     }
     if (!vscode.workspace.isTrusted) {
-      void vscode.window.showErrorMessage("NightRider: trust this workspace to let the extension edit your files.");
+      void vscode.window.showErrorMessage("KnightRider: trust this workspace to let the extension edit your files.");
       return false;
     }
 
@@ -80,11 +80,11 @@ export class CodeApplier implements vscode.Disposable {
   async insertAtCursor(code: string): Promise<boolean> {
     const editor = vscode.window.activeTextEditor;
     if (!editor) {
-      void vscode.window.showErrorMessage("NightRider: open a file and place the cursor where the code should go.");
+      void vscode.window.showErrorMessage("KnightRider: open a file and place the cursor where the code should go.");
       return false;
     }
     if (!vscode.workspace.isTrusted) {
-      void vscode.window.showErrorMessage("NightRider: trust this workspace to let the extension edit your files.");
+      void vscode.window.showErrorMessage("KnightRider: trust this workspace to let the extension edit your files.");
       return false;
     }
     if (!(await confirm(`Insert this code into ${basename(editor.document)}?`, ["Insert", "Cancel"]))) {
@@ -98,23 +98,23 @@ export class CodeApplier implements vscode.Disposable {
   /** Shows a side-by-side diff and can apply it from there. */
   async preview(doc: vscode.TextDocument, current: string, proposed: string): Promise<boolean> {
     if (current === proposed) {
-      void vscode.window.showInformationMessage("NightRider: the proposal is identical to what is already there.");
+      void vscode.window.showInformationMessage("KnightRider: the proposal is identical to what is already there.");
       return false;
     }
 
     const uri = vscode.Uri.from({
       scheme: PREVIEW_SCHEME,
-      path: doc.uri.path + ".nightrider-preview",
+      path: doc.uri.path + ".knightrider-preview",
       query: Date.now().toString()
     });
     this._preview.set(uri, proposed);
 
-    await vscode.commands.executeCommand("vscode.diff", doc.uri, uri, `${basename(doc)} (NightRider proposed)`, {
+    await vscode.commands.executeCommand("vscode.diff", doc.uri, uri, `${basename(doc)} (KnightRider proposed)`, {
       preview: true
     });
 
     const choice = await vscode.window.showInformationMessage(
-      "NightRider: apply these changes?",
+      "KnightRider: apply these changes?",
       { modal: false },
       "Apply",
       "Discard"
@@ -148,15 +148,15 @@ export class CodeApplier implements vscode.Disposable {
         }
       });
       if (!applied) {
-        void vscode.window.showErrorMessage("NightRider: could not apply the change (the file may have changed).");
+        void vscode.window.showErrorMessage("KnightRider: could not apply the change (the file may have changed).");
         return false;
       }
       logInfo(`applied edit to ${editor.document.uri.fsPath}`);
-      void vscode.window.showInformationMessage("NightRider: change applied.");
+      void vscode.window.showInformationMessage("KnightRider: change applied.");
       return true;
     } catch (err) {
       logWarn("failed to apply edit", err);
-      void vscode.window.showErrorMessage(`NightRider: ${(err as Error).message}`);
+      void vscode.window.showErrorMessage(`KnightRider: ${(err as Error).message}`);
       return false;
     }
   }
@@ -174,7 +174,7 @@ async function confirm(
     return actions[0];
   }
   return vscode.window.showWarningMessage(
-    `NightRider: ${message}`,
+    `KnightRider: ${message}`,
     { modal: true },
     ...actions
   );
@@ -201,14 +201,14 @@ function basename(doc: vscode.TextDocument): string {
 export async function runInTerminal(command: string): Promise<boolean> {
   if (!vscode.workspace.isTrusted) {
     void vscode.window.showErrorMessage(
-      "NightRider: trust this workspace before letting the extension run terminal commands."
+      "KnightRider: trust this workspace before letting the extension run terminal commands."
     );
     return false;
   }
 
   const confirmChoice = getConfig().confirmBeforeRun
     ? await vscode.window.showWarningMessage(
-        "NightRider: run this command?",
+        "KnightRider: run this command?",
         { modal: true },
         "Run",
         "Copy instead",
@@ -218,14 +218,14 @@ export async function runInTerminal(command: string): Promise<boolean> {
 
   if (confirmChoice === "Copy instead") {
     await vscode.env.clipboard.writeText(command);
-    void vscode.window.showInformationMessage("NightRider: command copied to the clipboard.");
+    void vscode.window.showInformationMessage("KnightRider: command copied to the clipboard.");
     return false;
   }
   if (confirmChoice !== "Run") {
     return false;
   }
 
-  const terminal = vscode.window.createTerminal("NightRider");
+  const terminal = vscode.window.createTerminal("KnightRider");
   terminal.show();
   terminal.sendText(command, true);
   return true;

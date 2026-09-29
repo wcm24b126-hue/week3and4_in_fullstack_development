@@ -10,7 +10,7 @@
       "preLaunchTask": "npm: compile"
     },
     {
-      "name": "Run Webview (nightrider.sidebar)",
+      "name": "Run Webview (knightrider.sidebar)",
       "type": "extensionHost",
       "request": "launch",
       "args": [

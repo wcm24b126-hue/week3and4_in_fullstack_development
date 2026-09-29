@@ -9,7 +9,7 @@ export interface CopilotState {
   limited: boolean;
 }
 
-const LIMITED_KEY = "nightrider.copilot.limited";
+const LIMITED_KEY = "knightrider.copilot.limited";
 
 /**
  * GitHub does not expose Copilot's remaining premium-request quota to other

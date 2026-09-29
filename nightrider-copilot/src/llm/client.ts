@@ -312,7 +312,7 @@ async function httpError(res: Response): Promise<LlmError> {
   }
   if (res.status === 404) {
     return new LlmError(
-      `${message}. The endpoint or model was not found - verify nightrider.apiBaseUrl and nightrider.model.`,
+      `${message}. The endpoint or model was not found - verify knightrider.apiBaseUrl and knightrider.model.`,
       "server",
       res.status
     );

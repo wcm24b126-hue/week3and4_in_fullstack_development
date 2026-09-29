@@ -8,7 +8,7 @@
 (function (global) {
   "use strict";
 
-  const HL = global.NightRiderHighlight;
+  const HL = global.KnightRiderHighlight;
   const escapeHtml = HL ? HL.escapeHtml : (t) =>
     String(t).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
@@ -275,5 +275,5 @@
     );
   }
 
-  global.NightRiderMarkdown = { render, inline, escapeHtml };
+  global.KnightRiderMarkdown = { render, inline, escapeHtml };
 })(typeof globalThis !== "undefined" ? globalThis : this);

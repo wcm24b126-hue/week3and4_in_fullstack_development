@@ -12,11 +12,11 @@ export function registerCodeActions(
   const makeAction = (id: QuickActionId, scope: string): vscode.CodeAction => {
     const def = QUICK_ACTIONS[id];
     const action = new vscode.CodeAction(
-      `NightRider: ${def.label} ${scope}`,
+      `KnightRider: ${def.label} ${scope}`,
       vscode.CodeActionKind.RefactorRewrite
     );
     action.command = {
-      command: "nightrider.action.runQuickAction",
+      command: "knightrider.action.runQuickAction",
       title: def.label,
       arguments: [id]
     };
@@ -54,6 +54,6 @@ export function registerCodeActions(
     vscode.languages.registerCodeActionsProvider({ scheme: "file" }, provider, {
       providedCodeActionKinds: [vscode.CodeActionKind.RefactorRewrite]
     }),
-    vscode.commands.registerCommand("nightrider.action.runQuickAction", (id: QuickActionId) => run(id))
+    vscode.commands.registerCommand("knightrider.action.runQuickAction", (id: QuickActionId) => run(id))
   );
 }

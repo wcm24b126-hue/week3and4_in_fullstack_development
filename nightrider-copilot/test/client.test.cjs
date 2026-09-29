@@ -66,7 +66,7 @@ function req(key, extra = {}) {
 
   // 4. 404 -> server kind with helpful message
   try { await complete(req("key-404")); check("404", false); }
-  catch (e) { check("404 message mentions model/endpoint", e.kind === "server" && /nightrider\.model/.test(e.message), e.message); }
+  catch (e) { check("404 message mentions model/endpoint", e.kind === "server" && /knightrider\.model/.test(e.message), e.message); }
 
   // 5. 500 -> retries then server error
   hits = 0;

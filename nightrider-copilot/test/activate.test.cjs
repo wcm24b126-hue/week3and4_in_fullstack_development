@@ -8,7 +8,7 @@ const { check, report, OUT } = require("./harness.cjs");
 
 const listeners = [];
 const logLines = [];
-const channel = { name: "NightRider", appendLine: (l) => logLines.push(l), append(){}, clear(){}, show(){}, hide(){}, replace(){}, dispose(){} };
+const channel = { name: "KnightRider", appendLine: (l) => logLines.push(l), append(){}, clear(){}, show(){}, hide(){}, replace(){}, dispose(){} };
 for (const m of ["info","warn","error","debug","trace"]) channel[m] = (l) => logLines.push(`[${m}] ${l}`);
 
 function mkMemento() {
@@ -133,9 +133,9 @@ module.exports.__vscode = vscode;
 
   const api = await ext.activate(context);
   check("activate() did not throw", true);
-  check("webview provider registered", vscode.window.__viewId === "nightriderSidebar", String(vscode.window.__viewId));
+  check("webview provider registered", vscode.window.__viewId === "knightriderSidebar", String(vscode.window.__viewId));
   check("provider has resolveWebviewView", typeof vscode.window.__provider?.resolveWebviewView === "function");
-  check("chat participant created", vscode.chat.__id === "nightrider.chat", String(vscode.chat.__id));
+  check("chat participant created", vscode.chat.__id === "knightrider.chat", String(vscode.chat.__id));
   check("commands registered", registered.size >= 26, String(registered.size));
 
   // all 26 manifest commands must be executable
@@ -151,7 +151,7 @@ module.exports.__vscode = vscode;
   check("every command runs without throwing", broken.length === 0, JSON.stringify(broken));
 
   // the webview must resolve and produce hardened HTML
-  const view = { webview, onDidDispose: () => ({ dispose(){} }), show: () => {}, visible: true, title: "NightRider" };
+  const view = { webview, onDidDispose: () => ({ dispose(){} }), show: () => {}, visible: true, title: "KnightRider" };
   await vscode.window.__provider.resolveWebviewView(view);
   lastWebviewHtml = webview.html;
   check("webview html generated", lastWebviewHtml.length > 500, String(lastWebviewHtml.length));
@@ -161,7 +161,7 @@ module.exports.__vscode = vscode;
   check("script-src uses the nonce", /script-src 'nonce-[A-Za-z0-9]{32}'/.test(lastWebviewHtml));
   check("no inline event handlers", !/\son(click|load|error)=/.test(lastWebviewHtml));
   check("localResourceRoots restricted", webviewOptions === null || JSON.stringify(webviewOptions).includes("media"));
-  check("history created on activate", context.globalState._m["nightrider.activeConversation"] !== undefined || true);
+  check("history created on activate", context.globalState._m["knightrider.activeConversation"] !== undefined || true);
 
   // re-resolve must not double-register the message listener
   const before = activeListeners();
